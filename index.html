@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <!-- Musik -->
   <audio id="bgMusic" loop>
     <source src="asset/jamrud.mp3" type="audio/mpeg" />
@@ -25,6 +26,7 @@
     <div class="container section-2 fade-section active">
       <h2>Detail Acara</h2>
       <p>Sabtu, 12 Juli 2025<br>Gedung Serbaguna Harmoni</p>
+      <div id="sessionInfo"></div>
     </div>
     <div class="container section-3 fade-section">
       <h2>Penutup</h2>
@@ -33,15 +35,18 @@
   </div>
 
   <script>
-    // Nama dari URL
-    function getGuestName() {
+    function getParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
-      const name = urlParams.get('to');
-      return name ? decodeURIComponent(name.replace(/\+/g, ' ')) : "Tamu Undangan";
+      return urlParams.get(param);
     }
-    document.getElementById("guestName").textContent = getGuestName();
 
-    // Musik kontrol
+    const guestName = getParam("to");
+    const session = getParam("session");
+
+    document.getElementById("guestName").textContent = guestName
+      ? decodeURIComponent(guestName.replace(/\+/g, " "))
+      : "Tamu Undangan";
+
     const bgMusic = document.getElementById("bgMusic");
     const musicBtn = document.getElementById("musicBtn");
     let isPlaying = false;
@@ -59,7 +64,6 @@
 
     musicBtn.addEventListener("click", toggleMusic);
 
-    // Otomatis mainkan musik setelah interaksi
     document.body.addEventListener("click", () => {
       if (!isPlaying) {
         bgMusic.play().catch(() => {});
@@ -68,31 +72,33 @@
       }
     }, { once: true });
 
-    // Buka undangan
     function openInvitation() {
-        const cover = document.getElementById("coverPage");
-        const wrapper = document.getElementById("sectionsWrapper");
-        const bgMusic = document.getElementById("bgMusic");
+      const cover = document.getElementById("coverPage");
+      const wrapper = document.getElementById("sectionsWrapper");
 
-        // Jalankan musik
-        bgMusic.play().then(() => {
-            console.log("Musik diputar.");
-        }).catch((error) => {
-            console.log("Musik gagal diputar:", error);
-        });
+      bgMusic.play().catch(() => {});
+      isPlaying = true;
+      musicBtn.textContent = "🔊";
 
-        // Fade out cover dan tampilkan isi undangan
-        cover.classList.remove("fade-in");
-        cover.classList.add("fade-out");
+      cover.classList.remove("fade-in");
+      cover.classList.add("fade-out");
 
-        setTimeout(() => {
-            cover.style.display = "none";
-            wrapper.style.display = "block";
-            wrapper.classList.add("fade-in");
-        }, 500);
+      setTimeout(() => {
+        cover.style.display = "none";
+        wrapper.style.display = "block";
+        wrapper.classList.add("fade-in");
+
+        const sessionInfo = document.getElementById("sessionInfo");
+        if (session === "1") {
+          sessionInfo.innerHTML = "<p><b>Sesi 1</b><br>12:00 – 13:00</p>";
+        } else if (session === "2") {
+          sessionInfo.innerHTML = "<p><b>Sesi 2</b><br>13:00 – 14:00</p>";
+        } else {
+          sessionInfo.innerHTML = "<p><i>Sesi belum ditentukan.</i></p>";
+        }
+      }, 500);
     }
 
-    // Navigasi antar halaman
     const sections = document.querySelectorAll(".fade-section");
     let currentSection = 0;
 
@@ -107,7 +113,6 @@
     function nextSection() { showSection(currentSection + 1); }
     function prevSection() { showSection(currentSection - 1); }
 
-    // Swipe
     let touchStartY = 0;
     document.addEventListener("touchstart", e => {
       if (document.getElementById("sectionsWrapper").style.display !== "block") return;
@@ -120,7 +125,6 @@
       else if (touchEndY > touchStartY + 50) prevSection();
     });
 
-    // Scroll
     let isScrolling = false;
     document.addEventListener("wheel", (e) => {
       if (document.getElementById("sectionsWrapper").style.display !== "block") return;
