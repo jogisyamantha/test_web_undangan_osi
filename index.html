@@ -8,8 +8,10 @@
 </head>
 <body>
   <!-- Musik -->
-  <audio id="bgMusic" src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" autoplay loop></audio>
-  <button id="musicBtn" onclick="toggleMusic()">🔊</button>
+  <audio id="bgMusic" loop>
+    <source src="asset/jamrud.mp3" type="audio/mpeg" />
+  </audio>
+  <button id="musicBtn">🔊</button>
 
   <!-- Halaman Cover -->
   <div id="coverPage" class="container section-1 fade-in">
@@ -31,49 +33,63 @@
   </div>
 
   <script>
-    // Ambil nama tamu dari URL
+    // Nama dari URL
     function getGuestName() {
       const urlParams = new URLSearchParams(window.location.search);
       const name = urlParams.get('to');
-      return name ? decodeURIComponent(name.replace(/\\+/g, ' ')) : null;
+      return name ? decodeURIComponent(name.replace(/\+/g, ' ')) : "Tamu Undangan";
     }
-
-    const guestName = getGuestName();
-    if (guestName) {
-      document.getElementById("guestName").textContent = guestName;
-    }
+    document.getElementById("guestName").textContent = getGuestName();
 
     // Musik kontrol
     const bgMusic = document.getElementById("bgMusic");
     const musicBtn = document.getElementById("musicBtn");
+    let isPlaying = false;
 
     function toggleMusic() {
-      if (bgMusic.paused) {
-        bgMusic.play();
-        musicBtn.textContent = "🔊";
-      } else {
+      if (isPlaying) {
         bgMusic.pause();
         musicBtn.textContent = "🔇";
+      } else {
+        bgMusic.play().catch(() => {});
+        musicBtn.textContent = "🔊";
       }
+      isPlaying = !isPlaying;
     }
 
-    window.addEventListener("load", () => {
-      bgMusic.play().catch(() => {});
-    });
+    musicBtn.addEventListener("click", toggleMusic);
 
-    // Buka undangan dengan fade
+    // Otomatis mainkan musik setelah interaksi
+    document.body.addEventListener("click", () => {
+      if (!isPlaying) {
+        bgMusic.play().catch(() => {});
+        isPlaying = true;
+        musicBtn.textContent = "🔊";
+      }
+    }, { once: true });
+
+    // Buka undangan
     function openInvitation() {
-      const cover = document.getElementById("coverPage");
-      const wrapper = document.getElementById("sectionsWrapper");
+        const cover = document.getElementById("coverPage");
+        const wrapper = document.getElementById("sectionsWrapper");
+        const bgMusic = document.getElementById("bgMusic");
 
-      cover.classList.remove("fade-in");
-      cover.classList.add("fade-out");
+        // Jalankan musik
+        bgMusic.play().then(() => {
+            console.log("Musik diputar.");
+        }).catch((error) => {
+            console.log("Musik gagal diputar:", error);
+        });
 
-      setTimeout(() => {
-        cover.style.display = "none";
-        wrapper.style.display = "block";
-        wrapper.classList.add("fade-in");
-      }, 500);
+        // Fade out cover dan tampilkan isi undangan
+        cover.classList.remove("fade-in");
+        cover.classList.add("fade-out");
+
+        setTimeout(() => {
+            cover.style.display = "none";
+            wrapper.style.display = "block";
+            wrapper.classList.add("fade-in");
+        }, 500);
     }
 
     // Navigasi antar halaman
@@ -88,31 +104,23 @@
       }
     }
 
-    function nextSection() {
-      showSection(currentSection + 1);
-    }
+    function nextSection() { showSection(currentSection + 1); }
+    function prevSection() { showSection(currentSection - 1); }
 
-    function prevSection() {
-      showSection(currentSection - 1);
-    }
-
-    // Swipe gesture
+    // Swipe
     let touchStartY = 0;
-    let touchEndY = 0;
-
-    document.addEventListener("touchstart", function(e) {
+    document.addEventListener("touchstart", e => {
       if (document.getElementById("sectionsWrapper").style.display !== "block") return;
       touchStartY = e.changedTouches[0].screenY;
     });
-
-    document.addEventListener("touchend", function(e) {
+    document.addEventListener("touchend", e => {
       if (document.getElementById("sectionsWrapper").style.display !== "block") return;
-      touchEndY = e.changedTouches[0].screenY;
+      const touchEndY = e.changedTouches[0].screenY;
       if (touchEndY < touchStartY - 50) nextSection();
       else if (touchEndY > touchStartY + 50) prevSection();
     });
 
-    // Scroll (desktop)
+    // Scroll
     let isScrolling = false;
     document.addEventListener("wheel", (e) => {
       if (document.getElementById("sectionsWrapper").style.display !== "block") return;
