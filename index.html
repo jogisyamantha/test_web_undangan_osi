@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Undangan Pernikahan</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Musik -->
+  <audio id="bgMusic" src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" autoplay loop></audio>
+  <button id="musicBtn" onclick="toggleMusic()">🔊</button>
+
+  <!-- Halaman Cover -->
+  <div id="coverPage" class="container section-1 fade-in">
+    <h2>Kepada Yth:</h2>
+    <h1 id="guestName">Tamu Undangan</h1>
+    <button onclick="openInvitation()">Buka Undangan</button>
+  </div>
+
+  <!-- Isi Undangan -->
+  <div id="sectionsWrapper" style="display: none;">
+    <div class="container section-2 fade-section active">
+      <h2>Detail Acara</h2>
+      <p>Sabtu, 12 Juli 2025<br>Gedung Serbaguna Harmoni</p>
+    </div>
+    <div class="container section-3 fade-section">
+      <h2>Penutup</h2>
+      <p>Merupakan suatu kehormatan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir.</p>
+    </div>
+  </div>
+
+  <script>
+    // Ambil nama tamu dari URL
+    function getGuestName() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const name = urlParams.get('to');
+      return name ? decodeURIComponent(name.replace(/\\+/g, ' ')) : null;
+    }
+
+    const guestName = getGuestName();
+    if (guestName) {
+      document.getElementById("guestName").textContent = guestName;
+    }
+
+    // Musik kontrol
+    const bgMusic = document.getElementById("bgMusic");
+    const musicBtn = document.getElementById("musicBtn");
+
+    function toggleMusic() {
+      if (bgMusic.paused) {
+        bgMusic.play();
+        musicBtn.textContent = "🔊";
+      } else {
+        bgMusic.pause();
+        musicBtn.textContent = "🔇";
+      }
+    }
+
+    window.addEventListener("load", () => {
+      bgMusic.play().catch(() => {});
+    });
+
+    // Buka undangan dengan fade
+    function openInvitation() {
+      const cover = document.getElementById("coverPage");
+      const wrapper = document.getElementById("sectionsWrapper");
+
+      cover.classList.remove("fade-in");
+      cover.classList.add("fade-out");
+
+      setTimeout(() => {
+        cover.style.display = "none";
+        wrapper.style.display = "block";
+        wrapper.classList.add("fade-in");
+      }, 500);
+    }
+
+    // Navigasi antar halaman
+    const sections = document.querySelectorAll(".fade-section");
+    let currentSection = 0;
+
+    function showSection(index) {
+      if (index >= 0 && index < sections.length) {
+        sections[currentSection].classList.remove("active");
+        currentSection = index;
+        sections[currentSection].classList.add("active");
+      }
+    }
+
+    function nextSection() {
+      showSection(currentSection + 1);
+    }
+
+    function prevSection() {
+      showSection(currentSection - 1);
+    }
+
+    // Swipe gesture
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    document.addEventListener("touchstart", function(e) {
+      if (document.getElementById("sectionsWrapper").style.display !== "block") return;
+      touchStartY = e.changedTouches[0].screenY;
+    });
+
+    document.addEventListener("touchend", function(e) {
+      if (document.getElementById("sectionsWrapper").style.display !== "block") return;
+      touchEndY = e.changedTouches[0].screenY;
+      if (touchEndY < touchStartY - 50) nextSection();
+      else if (touchEndY > touchStartY + 50) prevSection();
+    });
+
+    // Scroll (desktop)
+    let isScrolling = false;
+    document.addEventListener("wheel", (e) => {
+      if (document.getElementById("sectionsWrapper").style.display !== "block") return;
+      if (isScrolling) return;
+      isScrolling = true;
+      if (e.deltaY > 0) nextSection();
+      else prevSection();
+      setTimeout(() => isScrolling = false, 1000);
+    });
+  </script>
+</body>
+</html>
